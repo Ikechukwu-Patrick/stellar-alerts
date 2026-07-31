@@ -1,23 +1,96 @@
-# Contributing to Stellar Payment Tracker
+# Contributing to Stellar Alerts
 
-Thank you for your interest in contributing! We appreciate your help in making this project better for freelancers using the Stellar network.
+Thank you for your interest in contributing to Stellar Alerts! We welcome contributions to help build a seamless, real-time alert and tracking system for freelancers and businesses on the Stellar network.
 
-## Getting Started
+---
 
-1. **Fork and Clone:** Fork the repository on GitHub and clone it to your local machine.
-2. **Install Dependencies:** We use npm workspaces. Run `npm install` from the root directory to install all dependencies for both the frontend and backend.
-3. **Environment Setup:** Copy `.env.example` to `.env` in the respective application folders and fill in your local development values (e.g., PostgreSQL database URL, Redis URL).
-4. **Database Setup:** Run `npx prisma migrate dev` in the `apps/api` directory to initialize the database schema.
+## 🚀 Quick Start Guide
 
-## Development Workflow
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+- **PostgreSQL**: Local or hosted database instance (e.g. Neon, Supabase, Docker)
 
-- We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for all commit messages. Please format your commits as `type(scope): description`.
-- Ensure you test your changes locally. We exclusively use the Stellar testnet for all development and testing—never use real funds!
-- Create a new branch for your feature or bug fix: `git checkout -b feature/your-feature-name`.
+---
 
-## Submitting a Pull Request
+### 2. Installation
 
-1. Push your branch to your fork.
-2. Open a Pull Request against the `main` branch of this repository.
-3. Provide a clear description of the problem you solved or the feature you added.
-4. Wait for maintainers to review your PR.
+Clone the repository and install dependencies at the workspace root:
+
+```bash
+git clone https://github.com/stellar-alerts-labs/stellar-alerts.git
+cd stellar-alerts
+npm install
+```
+
+---
+
+### 3. Environment Configuration
+
+1. Copy `.env.example` to `apps/api/.env`:
+   ```bash
+   cp apps/api/.env.example apps/api/.env
+   ```
+2. Update `apps/api/.env` with your local database URL and JWT secret:
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/stellar_alerts?schema=public"
+   JWT_SECRET="your-super-secret-jwt-key"
+   PORT="3001"
+   ```
+
+---
+
+### 4. Database Setup
+
+Apply database schema migrations using Prisma:
+
+```bash
+npm run db:push
+```
+
+To open Prisma Studio and inspect database records in your browser:
+
+```bash
+npm run db:studio
+```
+
+---
+
+### 5. Running the Application
+
+You can launch components individually from the project root:
+
+| Command | Action |
+|---|---|
+| `npm run dev:api` | Starts the Fastify API server on http://localhost:3001 |
+| `npm run dev:worker` | Starts the Stellar Horizon Ingestion Worker process |
+| `npm run dev:web` | Starts the Next.js Frontend Dashboard on http://localhost:3000 |
+
+---
+
+## 🛠️ Development Workflow & Guidelines
+
+1. **Branch Naming**:
+   - Features: `feat/feature-name`
+   - Bugfixes: `fix/bug-description`
+   - Documentation: `docs/topic-name`
+
+2. **Commit Messages**:
+   We follow [Conventional Commits](https://www.conventionalcommits.org/):
+   - `feat(api): add notification webhook service`
+   - `fix(worker): handle network timeout on horizon query`
+   - `docs: update setup guide in CONTRIBUTING.md`
+
+3. **Testing with Stellar Testnet**:
+   - Always test blockchain operations against **Stellar Testnet**.
+   - Fund test public keys using [Stellar Friendbot](https://friendbot.stellar.org).
+   - Never use real Stellar mainnet secret keys or funds during development!
+
+---
+
+## 🤝 Submitting Pull Requests
+
+1. Push your feature branch to your fork or branch.
+2. Create a Pull Request against `main`.
+3. Provide a clear summary of changes and verification steps.
+4. Maintainers will review and merge your PR.
