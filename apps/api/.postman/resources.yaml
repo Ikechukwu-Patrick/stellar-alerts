@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 2bd1457a-a68a-41af-b20a-227f861ec3f0
+
+localResources:
+  collections:
+    - ../stellar_alerts.postman_collection.json

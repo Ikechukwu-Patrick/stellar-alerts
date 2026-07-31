@@ -14,12 +14,12 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.token) return null;
-        
+
         try {
           const res = await fetch(`http://localhost:3001/auth/verify?token=${encodeURIComponent(credentials.token)}`);
           if (!res.ok) return null;
           const data = await res.json();
-          
+
           if (data.success && data.token && data.user) {
             return { id: data.user.id, name: data.user.email, email: data.user.email, accessToken: data.token };
           }
@@ -54,5 +54,7 @@ const handler = NextAuth({
   },
   secret: process.env.NEXTAUTH_SECRET,
 })
+
+
 
 export { handler as GET, handler as POST }
