@@ -1,29 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { requestLinkSchema, verifyLinkSchema } from './auth.schema';
-import { authService } from './auth.service';
+import { authController } from './auth.controller';
+import { authenticateHook } from '../../middleware/auth.middleware';
 
 export async function authRoutes(app: FastifyInstance) {
-  app.post('/auth/request-link', async (request, reply) => {
-    const parsed = requestLinkSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.status(400).send({ error: 'Invalid email', details: parsed.error.format() });
-    }
-    
-    await authService.requestMagicLink(parsed.data.email);
-    return reply.send({ success: true, message: 'If the email exists, a magic link was sent.' });
-  });
-
-  app.get('/auth/verify', async (request, reply) => {
-    const parsed = verifyLinkSchema.safeParse(request.query);
-    if (!parsed.success) {
-      return reply.status(400).send({ error: 'Invalid token' });
-    }
-
-    try {
-      const { token: sessionToken, user } = await authService.verifyMagicLink(parsed.data.token);
-      return reply.send({ success: true, token: sessionToken, user });
-    } catch (error) {
-      return reply.status(401).send({ error: 'Invalid or expired token' });
-    }
-  });
+  app.post('/auth/request-link', authController.requestMagicLink.bind(authController));
+  app.get('/auth/verify', authController.verifyMagicLink.bind(authController));
+  app.get('/auth/me', { preHandler: [authenticateHook] }, authController.getMe.bind(authController));
 }
