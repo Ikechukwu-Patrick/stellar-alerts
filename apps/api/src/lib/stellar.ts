@@ -6,6 +6,11 @@ export const stellar = {
   server,
   // Helper to fetch recent payments for a given account
   async getRecentPayments(publicKey: string, limit: number = 10) {
+    if (!publicKey || publicKey.length !== 56 || !publicKey.startsWith('G')) {
+      console.warn(`[Stellar] Skipping invalid public key format: "${publicKey}"`);
+      return [];
+    }
+
     try {
       const payments = await server.payments()
         .forAccount(publicKey)

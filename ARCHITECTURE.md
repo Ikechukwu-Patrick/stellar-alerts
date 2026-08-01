@@ -2,111 +2,112 @@
 
 ## 1. Overview
 
-A tool that watches a person's Stellar wallet for incoming payments and notifies them
-in real time, with a full history available in a web dashboard.
+Stellar Alerts is an open-source real-time tracker and alert system for Stellar wallets. It monitors registered Stellar public keys for incoming payment operations on the Stellar network (Testnet / Mainnet) and records full transaction history in PostgreSQL, with real-time notifications dispatched to users.
 
 Data flows in one direction, start to finish:
 
 ```
-Stellar network → Background workers → Postgres → Fastify API → Next.js web app
-                        │
-                        └──> Telegram / Email (notifications, fired directly)
+Stellar network → Ingestion Worker (Watcher) → PostgreSQL → Fastify API → Next.js Web App
+                         │
+                         └──> Telegram / Email / Webhooks (Notifications)
 ```
 
-The Next.js app never talks to Stellar directly. It only ever calls the Fastify API,
-which reads from Postgres. All blockchain logic lives in one place: the backend.
+The Next.js web application never communicates with Stellar directly. It consumes the typed Fastify REST API, which queries PostgreSQL via Prisma ORM.
 
 ---
 
-## 2. Tech stack
+## 2. Tech Stack
 
-| Layer            | Choice                                   |
-|-------------------|-------------------------------------------|
-| Backend framework | Fastify + TypeScript                      |
-| Frontend framework| Next.js + TypeScript (App Router)         |
-| ORM / Database    | Prisma + PostgreSQL                       |
-| Job queue         | BullMQ + Redis                            |
-| Blockchain access | `stellar-sdk` (Horizon REST + SSE streams)|
-| Notifications     | Telegram Bot API, Email (Resend), WhatsApp (phase 2) |
-| Auth              | Passwordless magic-link email + JWT session cookie |
-
-**Why BullMQ/Redis:** this is the same job-queue pattern already planned for the church
-contributions app — no new stack to learn, just a second use for a pattern already
-being worked out.
+| Layer            | Choice                                   | Status |
+|-------------------|-------------------------------------------|--------|
+| Backend framework | Fastify + TypeScript                      | ✅ Implemented |
+| Frontend framework| Next.js (App Router) + TypeScript         | 🔄 Next Phase |
+| Database & ORM    | PostgreSQL + Prisma ORM                   | ✅ Implemented |
+| Blockchain SDK    | `stellar-sdk` (Horizon REST + Testnet)    | ✅ Implemented |
+| Ingestion Worker  | Standalone Node/TypeScript process (`watcher.worker.ts`) | ✅ Implemented |
+| Job queue         | BullMQ + Redis                            | 🔄 Planned |
+| Notifications     | Telegram Bot API, Email (Resend), Webhooks | 🔄 Planned |
+| Auth              | Passwordless Magic Link + JWT Session      | ✅ Implemented |
 
 ---
 
-## 3. Backend structure (Fastify + TypeScript)
+## 3. Backend Architecture (`apps/api`)
 
 ```
 apps/api/
 ├── src/
-│   ├── app.ts                    # Fastify instance, plugin registration
-│   ├── server.ts                 # Entry point, starts the HTTP server
+│   ├── server.ts                 # Entry point, starts Fastify HTTP server
+│   ├── app.ts                    # Registers plugins, middleware, and routes
 │   ├── config/
-│   │   └── env.ts                # Environment variable validation (zod)
+│   │   └── env.ts                # Environment variable validation (Zod)
+│   ├── lib/
+│   │   ├── prisma.ts             # Prisma client singleton
+│   │   └── stellar.ts            # Stellar Horizon SDK wrapper & validation
 │   ├── plugins/
-│   │   ├── prisma.ts             # Registers Prisma client as a Fastify decorator
-│   │   ├── auth.ts               # JWT/session verification (preHandler hook)
-│   │   └── cors.ts
+│   │   └── prisma.ts             # Fastify Prisma plugin
+│   ├── middleware/
+│   │   └── auth.middleware.ts    # JWT Bearer token authentication preHandler
+│   ├── utils/
+│   │   └── jwt.ts                # Magic token and Session token generation & verification
 │   ├── modules/
 │   │   ├── auth/
-│   │   │   ├── auth.routes.ts     # POST /auth/request-link, GET /auth/verify
-│   │   │   ├── auth.service.ts    # magic-link token generation/verification
-│   │   │   └── auth.schema.ts     # request/response schemas (zod or typebox)
+│   │   │   ├── auth.routes.ts     # POST /auth/request-link, GET /auth/verify, GET /auth/me
+│   │   │   ├── auth.controller.ts # Request handlers & error response formatting
+│   │   │   ├── auth.service.ts    # Magic link signing, verification, and user upsert
+│   │   │   └── auth.schema.ts     # Zod validation schemas
 │   │   ├── wallets/
-│   │   │   ├── wallets.routes.ts  # POST /wallets, DELETE /wallets/:id
-│   │   │   ├── wallets.service.ts # validates + stores a Stellar public key
+│   │   │   ├── wallets.routes.ts  # POST /wallets, GET /wallets, DELETE /wallets/:id
+│   │   │   ├── wallets.controller.ts
+│   │   │   ├── wallets.service.ts # Public key validation & DB persistence
 │   │   │   └── wallets.schema.ts
-│   │   ├── payments/
-│   │   │   ├── payments.routes.ts # GET /payments, GET /payments/summary
-│   │   │   └── payments.service.ts
-│   │   └── notifications/
-│   │       ├── notifications.routes.ts  # GET/PUT /notifications/preferences
-│   │       └── notifications.service.ts
-│   ├── workers/
-│   │   ├── watcher.worker.ts     # polls/streams Horizon per wallet
-│   │   └── notify.worker.ts      # BullMQ consumer, fans out alerts
-│   ├── queues/
-│   │   └── notification.queue.ts # BullMQ queue definition
-│   └── lib/
-│       ├── stellar.ts            # thin wrapper around stellar-sdk
-│       ├── telegram.ts
-│       └── email.ts
+│   │   └── payments/
+│   │       ├── payments.routes.ts # GET /payments, GET /payments/summary
+│   │       ├── payments.controller.ts
+│   │       └── payments.service.ts# Payment queries & summary statistics
+│   └── workers/
+│       └── watcher.worker.ts     # Stellar Horizon worker process for payment ingestion
 ├── prisma/
-│   └── schema.prisma
+│   └── schema.prisma             # Data models for User, Wallet, Payment, NotificationPreference
 └── package.json
 ```
 
 ---
 
-## 4. Frontend structure (Next.js + TypeScript)
+## 4. Active API Endpoints
 
-```
-apps/web/
-├── app/
-│   ├── page.tsx                       # Landing page — problem, solution, CTA
-│   ├── (auth)/
-│   │   ├── login/page.tsx             # Email entry
-│   │   └── verify/page.tsx            # Magic-link landing, exchanges token for session
-│   ├── (dashboard)/
-│   │   ├── layout.tsx                 # Authenticated shell (nav, notification bell)
-│   │   ├── onboarding/page.tsx        # Connect Stellar address
-│   │   ├── settings/
-│   │   │   └── notifications/page.tsx # Toggle Telegram / email / WhatsApp
-│   │   └── dashboard/page.tsx         # History table + live feed
-├── components/
-│   ├── WalletConnectForm.tsx
-│   ├── NotificationToggleList.tsx
-│   ├── PaymentHistoryTable.tsx
-│   └── NotificationBell.tsx
-└── lib/
-    └── apiClient.ts                   # Typed fetch wrapper to the Fastify API
+| Endpoint | Method | Auth Required | Description |
+|---|---|---|---|
+| `/health` | GET | No | Server health check |
+| `/auth/request-link` | POST | No | Request a passwordless magic login link |
+| `/auth/verify` | GET | No | Verify magic link token & issue session JWT |
+| `/auth/me` | GET | Yes | Fetch authenticated user profile with wallets |
+| `/wallets` | POST | Yes | Register a new Stellar public key |
+| `/wallets` | GET | Yes | List registered wallets for current user |
+| `/wallets/:id` | DELETE | Yes | Remove a wallet by ID |
+| `/payments` | GET | Yes | Fetch payment transaction history |
+| `/payments/summary`| GET | Yes | Aggregate payment stats (total payments, volume) |
+
+---
+
+## 5. Ingestion Worker Flow
+
+The ingestion worker ([watcher.worker.ts](file:///c:/Users/user/OneDrive/Documents/Open-source/stellar-alerts/apps/api/src/workers/watcher.worker.ts)) operates as follows:
+
+1. **Wallet Retrieval**: Fetches all active tracked wallets from PostgreSQL.
+2. **Horizon Ingestion**: Queries `stellar-sdk` Horizon API for recent payment operations (`payment` and `create_account`).
+3. **Validation & Deduplication**:
+   - Validates Stellar public key format (`G...`, 56 characters).
+   - Checks `prisma.payment.findUnique({ where: { txHash } })` to guarantee idempotent ingestion without duplicate records.
+4. **Persistence**: Writes payment records (amount, asset, fromAddress, receivedAt, txHash) to the `Payment` table.
+
+Run the worker locally:
+```bash
+npm run dev:worker
 ```
 
 ---
 
-## 5. Data model (Prisma schema)
+## 6. Database Schema (Prisma)
 
 ```prisma
 model User {
@@ -154,46 +155,8 @@ model NotificationPreference {
 
 ---
 
-## 6. How the pieces talk to each other
+## 7. Security Notes
 
-1. `watcher.worker.ts` runs on a schedule (or streams via Horizon's SSE endpoint) for
-   every wallet stored in the database, checking for new incoming payment operations.
-2. A new payment is found → written to the `Payment` table via Prisma → a job is
-   pushed onto `notification.queue` (BullMQ/Redis).
-3. `notify.worker.ts` consumes that queue, checks the user's `NotificationPreference`,
-   and fans out to whichever channels are enabled — Telegram and email at launch,
-   WhatsApp once Meta's business approval is in place.
-4. The Next.js app only ever calls the Fastify API (`/payments`, `/wallets`,
-   `/notifications/preferences`). It never touches Stellar or Postgres directly.
-
----
-
-## 7. Auth approach
-
-Passwordless magic-link email: a user enters their email, the backend generates a
-short-lived signed token, emails a login link, and verifying that link issues a
-session (JWT in an httpOnly cookie). No password hashing or storage to manage — one
-less security surface for a project maintained solo.
-
----
-
-## 8. Deployment sketch
-
-| Piece      | Suggested host                         |
-|------------|------------------------------------------|
-| API        | Render or Railway                        |
-| Web        | Vercel (native Next.js hosting)          |
-| Postgres   | Neon                                     |
-| Redis      | Upstash (serverless-friendly)            |
-
----
-
-## 9. Security notes
-
-- Only ever store **public** Stellar addresses — private keys are never requested,
-  transmitted, or stored, anywhere in the system.
-- Validate the Stellar public key format before accepting it (starts with `G`, 56
-  characters, valid checksum) to reject typos and garbage input early.
-- Rate-limit the wallet-add and magic-link endpoints to prevent abuse.
-- Test everything against Stellar's public testnet before pointing the watcher at any
-  real wallet.
+- Only **public** Stellar addresses (`G...`) are stored. Private keys are never requested or stored.
+- All endpoints validate inputs using Zod schemas.
+- JWT Session tokens are signed using a secret environment key with strict expiration windows.
