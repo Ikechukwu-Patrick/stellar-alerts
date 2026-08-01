@@ -4,7 +4,7 @@ import { generateMagicToken, generateSessionToken, verifyToken, MagicLinkPayload
 export class AuthService {
   async requestMagicLink(email: string): Promise<string> {
     const token = generateMagicToken(email);
-    console.log(`[AuthService] Magic link generated: http://localhost:3000/?token=${token}`);
+    console.log(`[AuthService] ✉️ Magic link generated: http://localhost:3000/verify?token=${token}`);
     return token;
   }
 
