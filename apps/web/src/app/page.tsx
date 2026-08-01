@@ -636,7 +636,7 @@ export default function Home() {
             <span className="text-sm font-bold text-white">StellarAlerts</span>
             <span className="text-xs text-gray-500">— Non-Custodial Stellar Payment Tracker</span>
           </div>
-          <p className="text-xs text-gray-500">Released under the MIT License • Built for Grandfox Hackathon Submission</p>
+          <p className="text-xs text-gray-500">Released under the MIT License</p>
         </div>
       </footer>
     </div>
