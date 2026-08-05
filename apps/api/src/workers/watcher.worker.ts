@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { stellar } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
+import { getSorobanLatestLedger } from '../lib/soroban';
 
 export async function processPaymentRecord(
   wallet: { id: string; publicKey: string },
