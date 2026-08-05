@@ -1,0 +1,55 @@
+name: 🚀 Feature Request (Drips Wave Standard)
+description: Propose a new feature, architecture enhancement, or tool integration for Stellar Alerts.
+title: "[FEAT]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature for **Stellar Alerts**! Please provide structured information matching Drips Wave maintainer standards.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Concise overview of the feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background & Context
+      description: What problem or ecosystem need does this solve for Stellar users or developers?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Detailed implementation approach and architectural changes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: List measurable criteria to mark this issue complete.
+      placeholder: |
+        - [ ] Feature is implemented behind toggle.
+        - [ ] Unit tests added with >80% coverage.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      options:
+        - Trivial
+        - Medium
+        - High
+    validations:
+      required: true
