@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@stellar-alerts/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [
