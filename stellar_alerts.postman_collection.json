@@ -143,7 +143,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"publicKey\": \"GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335WF2CCAJ3KPXYALIZ6EHVCC2D\",\n  \"label\": \"Main Trading Wallet\"\n}"
+              "raw": "{\n  \"publicKey\": \"GDX3I6LJUZNVV7UZVGXFNFXSWD7MTQ2KQ2UTRKQUOGKQUR2TQY6BBLLR\",\n  \"label\": \"Main Trading Wallet\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/wallets",

@@ -23,7 +23,7 @@ We provide security updates for the following versions of Stellar Alerts:
 
 If you discover a potential security vulnerability in Stellar Alerts, please **do not open a public issue**. Instead, report it privately:
 
-1. **Email:** Send your vulnerability details to `security@stellar-alerts.org` or open a private GitHub Security Advisory.
+1. **Email:** Send your vulnerability details to `favourtobiloba200@gmail.com` or open a private GitHub Security Advisory.
 2. **Details:** Include a detailed description of the vulnerability, steps to reproduce, and potential impact.
 3. **Response Time:** We acknowledge receipt within 24 hours and aim to provide a resolution within 5 business days.
 
