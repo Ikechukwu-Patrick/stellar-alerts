@@ -8,6 +8,7 @@ import { paymentsRoutes } from './modules/payments/payments.routes';
 export const buildApp = async () => {
   const app = Fastify({
     logger: true,
+    pluginTimeout: 30000,
   });
 
   await app.register(cors, {

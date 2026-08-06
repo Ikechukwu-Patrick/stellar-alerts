@@ -1,3 +1,4 @@
+import * as StellarSdk from 'stellar-sdk';
 import { prisma } from '../lib/prisma';
 import { stellar } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
@@ -60,8 +61,8 @@ export async function processPaymentRecord(
 }
 
 export async function processWalletPayments(wallet: { id: string; publicKey: string }) {
-  if (!wallet.publicKey || wallet.publicKey.length !== 56 || !wallet.publicKey.startsWith('G')) {
-    console.warn(`[WatcherWorker] Skipping invalid public key format: "${wallet.publicKey}"`);
+  if (!wallet.publicKey || !StellarSdk.StrKey.isValidEd25519PublicKey(wallet.publicKey)) {
+    console.warn(`[WatcherWorker] Skipping invalid public key checksum: "${wallet.publicKey}"`);
     return;
   }
 
