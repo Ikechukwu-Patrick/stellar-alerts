@@ -6,6 +6,6 @@ build
 
 dev.db
 *.db
-scripts
+scripts/
 
 apps/**/.env.local
