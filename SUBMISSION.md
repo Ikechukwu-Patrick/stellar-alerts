@@ -1,4 +1,4 @@
-# Drips Wave & Stellar Grant Submission — Stellar Alerts
+# Submission — Stellar Alerts
 
 ## 📌 Executive Summary
 
