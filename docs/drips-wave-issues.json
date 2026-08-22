@@ -5,7 +5,7 @@
     "category": "Backend",
     "milestone": "Milestone 3 – Reliability",
     "complexity": "High",
-    "estimatedPoints": 8,
+    "estimatedPoints": 200,
     "labels": [
       "backend",
       "stellar",
@@ -33,8 +33,8 @@
     "title": "[FEAT]: Implement Persistent Cursor Tracking Table in Prisma Schema",
     "category": "Backend",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "backend",
       "database"
@@ -62,7 +62,7 @@
     "category": "Backend",
     "milestone": "Milestone 2 – Core Features",
     "complexity": "High",
-    "estimatedPoints": 8,
+    "estimatedPoints": 200,
     "labels": [
       "backend",
       "stellar",
@@ -89,8 +89,8 @@
     "title": "[SEC]: Add Request Rate Limiting Middleware (@fastify/rate-limit)",
     "category": "Security",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "complexity": "Medium",
+    "estimatedPoints": 150,
     "labels": [
       "api",
       "security"
@@ -116,8 +116,8 @@
     "title": "[FEAT]: Implement Webhook Alert Endpoint Management API",
     "category": "API",
     "milestone": "Milestone 2 – Core Features",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "api",
       "feature"
@@ -142,8 +142,8 @@
     "title": "[DX]: Integrate Fastify Swagger & Scalar for OpenAPI Interactive Docs",
     "category": "Documentation",
     "milestone": "Milestone 5 – Developer Experience",
-    "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "complexity": "Medium",
+    "estimatedPoints": 150,
     "labels": [
       "api",
       "documentation",
@@ -170,8 +170,8 @@
     "title": "[SEC]: Enforce Strict CORS Origin Controls and Security Headers",
     "category": "Security",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "complexity": "Medium",
+    "estimatedPoints": 150,
     "labels": [
       "security",
       "api"
@@ -195,8 +195,8 @@
     "title": "[DB]: Configure PostgreSQL Read Replicas & Connection Pooling",
     "category": "Database",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "database",
       "performance"
@@ -221,7 +221,7 @@
     "category": "Blockchain",
     "milestone": "Milestone 2 – Core Features",
     "complexity": "High",
-    "estimatedPoints": 8,
+    "estimatedPoints": 200,
     "labels": [
       "soroban",
       "stellar",
@@ -247,7 +247,7 @@
     "category": "Backend",
     "milestone": "Milestone 2 – Core Features",
     "complexity": "High",
-    "estimatedPoints": 8,
+    "estimatedPoints": 200,
     "labels": [
       "backend",
       "queue",
@@ -272,8 +272,8 @@
     "title": "[SEC]: HMAC SHA256 Webhook Payload Cryptographic Signer",
     "category": "Security",
     "milestone": "Milestone 2 – Core Features",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "security",
       "webhooks"
@@ -297,8 +297,8 @@
     "title": "[SEC]: Base32 CRC16-XMODEM StrKey Public Key Validation Guard",
     "category": "Security",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "security",
       "stellar"
@@ -323,8 +323,8 @@
     "title": "[SEC]: Single-Use Token Invalidation & Expiration Guard for Magic Links",
     "category": "Security",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "security",
       "auth"
@@ -348,8 +348,8 @@
     "title": "[SEC]: JWT Session Token Revocation & Redis Blocklist",
     "category": "Security",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "security",
       "auth"
@@ -373,8 +373,8 @@
     "title": "[FEAT]: Payment Aggregate Volume & Statistics REST Endpoints",
     "category": "API",
     "milestone": "Milestone 2 – Core Features",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "api",
       "analytics"
@@ -398,8 +398,8 @@
     "title": "[FEAT]: Telegram Bot Notification Worker Dispatcher",
     "category": "Backend",
     "milestone": "Milestone 2 – Core Features",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "notifications",
       "telegram"
@@ -423,8 +423,8 @@
     "title": "[FEAT]: Email Notification Worker Dispatcher via Resend API",
     "category": "Backend",
     "milestone": "Milestone 2 – Core Features",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "notifications",
       "email"
@@ -448,8 +448,8 @@
     "title": "[FEAT]: Deep Health Inspection Probe (/health/deep)",
     "category": "DevOps",
     "milestone": "Milestone 3 – Reliability",
-    "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "complexity": "Medium",
+    "estimatedPoints": 150,
     "labels": [
       "devops",
       "monitoring"
@@ -473,8 +473,8 @@
     "title": "[DX]: Structured Pino Logging with Correlation IDs (x-request-id)",
     "category": "Logging",
     "milestone": "Milestone 5 – Developer Experience",
-    "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "complexity": "Medium",
+    "estimatedPoints": 150,
     "labels": [
       "logging",
       "dx"
@@ -498,8 +498,8 @@
     "title": "[RELIABILITY]: Graceful Process Shutdown Handler for API and Watcher",
     "category": "Reliability",
     "milestone": "Milestone 3 – Reliability",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "backend",
       "devops"
@@ -524,8 +524,8 @@
     "title": "[DB]: Database Connection Retry Strategy with Exponential Backoff",
     "category": "Database",
     "milestone": "Milestone 3 – Reliability",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "database",
       "reliability"
@@ -550,7 +550,7 @@
     "category": "Reliability",
     "milestone": "Milestone 3 – Reliability",
     "complexity": "High",
-    "estimatedPoints": 8,
+    "estimatedPoints": 200,
     "labels": [
       "stellar",
       "reliability"
@@ -574,8 +574,8 @@
     "title": "[RELIABILITY]: Dead Letter Queue (DLQ) for Failed Notification Dispatches",
     "category": "Reliability",
     "milestone": "Milestone 3 – Reliability",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "queue",
       "reliability"
@@ -599,8 +599,8 @@
     "title": "[DB]: Payment Table txHash Unique Constraint Index Optimization",
     "category": "Database",
     "milestone": "Milestone 1 – Foundation",
-    "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "complexity": "Medium",
+    "estimatedPoints": 150,
     "labels": [
       "database",
       "performance"
@@ -624,8 +624,8 @@
     "title": "[FEAT]: Webhook Delivery Audit Log Persistence",
     "category": "API",
     "milestone": "Milestone 2 – Core Features",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "api",
       "database"
@@ -650,8 +650,8 @@
     "title": "[RELIABILITY]: Circuit Breaker Pattern for External HTTP Targets",
     "category": "Reliability",
     "milestone": "Milestone 3 – Reliability",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "reliability",
       "webhooks"
@@ -675,8 +675,8 @@
     "title": "[FEAT]: Refactor Web Dashboard into Modular React Components",
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "frontend",
       "react",
@@ -703,7 +703,7 @@
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
     "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "estimatedPoints": 100,
     "labels": [
       "frontend",
       "ui",
@@ -729,7 +729,7 @@
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
     "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "estimatedPoints": 100,
     "labels": [
       "frontend",
       "ui"
@@ -754,7 +754,7 @@
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
     "complexity": "Medium",
-    "estimatedPoints": 5,
+    "estimatedPoints": 150,
     "labels": [
       "frontend",
       "mobile"
@@ -778,8 +778,8 @@
     "title": "[FEAT]: Passwordless Magic Link Authentication Flow UI (/verify)",
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "frontend",
       "auth"
@@ -804,7 +804,7 @@
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
     "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "estimatedPoints": 100,
     "labels": [
       "frontend",
       "stellar"
@@ -828,8 +828,8 @@
     "title": "[FEAT]: Export Payment History to CSV and JSON",
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "frontend",
       "export"
@@ -854,7 +854,7 @@
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
     "complexity": "Medium",
-    "estimatedPoints": 5,
+    "estimatedPoints": 150,
     "labels": [
       "frontend",
       "ui"
@@ -878,8 +878,8 @@
     "title": "[FEAT]: Notification Preference Configuration Modal UI",
     "category": "Frontend",
     "milestone": "Milestone 4 – Dashboard UI",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "frontend",
       "notifications"
@@ -903,8 +903,8 @@
     "title": "[CI/CD]: GitHub Actions Automated Build, Typecheck & Test Pipeline",
     "category": "CI/CD",
     "milestone": "Milestone 5 – Developer Experience",
-    "complexity": "Medium",
-    "estimatedPoints": 5,
+    "complexity": "High",
+    "estimatedPoints": 200,
     "labels": [
       "cicd",
       "github-actions"
@@ -929,7 +929,7 @@
     "category": "Testing",
     "milestone": "Milestone 5 – Developer Experience",
     "complexity": "Medium",
-    "estimatedPoints": 5,
+    "estimatedPoints": 150,
     "labels": [
       "testing",
       "vitest"
@@ -955,7 +955,7 @@
     "category": "DevOps",
     "milestone": "Milestone 5 – Developer Experience",
     "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "estimatedPoints": 100,
     "labels": [
       "devops",
       "docker"
@@ -980,7 +980,7 @@
     "category": "DevOps",
     "milestone": "Milestone 5 – Developer Experience",
     "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "estimatedPoints": 100,
     "labels": [
       "turborepo",
       "monorepo"
@@ -1006,7 +1006,7 @@
     "category": "Architecture",
     "milestone": "Milestone 5 – Developer Experience",
     "complexity": "Medium",
-    "estimatedPoints": 5,
+    "estimatedPoints": 150,
     "labels": [
       "monorepo",
       "typescript"
@@ -1031,7 +1031,7 @@
     "category": "Governance",
     "milestone": "Milestone 5 – Developer Experience",
     "complexity": "Trivial",
-    "estimatedPoints": 3,
+    "estimatedPoints": 100,
     "labels": [
       "governance",
       "github"
@@ -1057,7 +1057,7 @@
     "category": "Documentation",
     "milestone": "Milestone 5 – Developer Experience",
     "complexity": "Medium",
-    "estimatedPoints": 5,
+    "estimatedPoints": 150,
     "labels": [
       "documentation",
       "drips-wave"
