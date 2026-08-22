@@ -115,3 +115,12 @@ Or launch components individually from the project root:
 2. Create a Pull Request against `main`.
 3. Fill out the included [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
 4. Maintainers will review and merge your PR once GitHub Actions CI status is green 🟢.
+
+---
+
+## 💬 Need Help? Join Community Chat
+
+Have questions or want to discuss an issue before working on it? Join our Telegram maintainers & contributors chat:
+
+👉 **[Join Stellar Alerts Telegram Group](https://t.me/+uElHrnWMb180MWM0)**
+

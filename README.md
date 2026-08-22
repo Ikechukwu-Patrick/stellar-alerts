@@ -6,6 +6,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16.2-black.svg)](https://nextjs.org/)
 [![Stellar SDK](https://img.shields.io/badge/Stellar_SDK-13.3-purple.svg)](https://developers.stellar.org/)
 [![CI Status](https://github.com/stellar-alerts-labs/stellar-alerts/actions/workflows/ci.yml/badge.svg)](https://github.com/stellar-alerts-labs/stellar-alerts/actions/workflows/ci.yml)
+[![Telegram Chat](https://img.shields.io/badge/Telegram-Join_Community-blue.svg?logo=telegram)](https://t.me/+uElHrnWMb180MWM0)
 
 **Real-Time Stellar Payment Tracker, Soroban Event Ingestion & Non-Custodial Alert Engine**
 
@@ -87,6 +88,14 @@ npx tsx --env-file=apps/api/.env apps/api/scripts/seed-and-trigger-payment.ts
 - **Contribution Guidelines**: See **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 - **Development Roadmap**: See **[ROADMAP.md](ROADMAP.md)**.
 - **Soroban Smart Contract**: See **[contracts/alert_registry/README.md](contracts/alert_registry/README.md)**.
+
+---
+
+## 💬 Community & Support
+
+Join our official Telegram community to ask questions, chat with maintainers, discuss Drips Wave sprint tasks, and stay updated on new releases:
+
+👉 **[Join Stellar Alerts on Telegram](https://t.me/+uElHrnWMb180MWM0)**
 
 ---
 
