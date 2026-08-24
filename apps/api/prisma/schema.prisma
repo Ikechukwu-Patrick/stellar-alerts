@@ -12,6 +12,7 @@ model User {
   email       String                   @unique
   createdAt   DateTime                 @default(now())
   wallets     Wallet[]
+  webhooks    Webhook[]
   notifyPrefs NotificationPreference?
 }
 
@@ -43,6 +44,7 @@ model Payment {
   fromAddress String
   amount      Decimal
   asset       String
+  assetIssuer String?
   memo        String?
   receivedAt  DateTime
   createdAt   DateTime @default(now())
@@ -57,4 +59,14 @@ model NotificationPreference {
   emailEnabled    Boolean @default(true)
   whatsappNumber  String?
   whatsappEnabled Boolean @default(false)
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  url       String
+  secret    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }

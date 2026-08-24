@@ -7,6 +7,7 @@ export interface AlertJobData {
   walletId: string;
   amount: string;
   asset: string;
+  assetIssuer?: string | null;
   fromAddress: string;
   receivedAt: string;
 }

@@ -2,14 +2,175 @@ import * as StellarSdk from 'stellar-sdk';
 
 const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org');
 
-function logPaymentsError(publicKey: string, error: any) {
-  if (error?.response?.status === 404) {
-    console.warn(`[Stellar] Account not found or not funded on Testnet: ${publicKey}`);
-  } else if (error?.response?.status === 400) {
-    console.warn(`[Stellar] Horizon 400 Bad Request for ${publicKey}: ${error?.response?.data?.detail || error.message}`);
-  } else {
-    console.error(`[Stellar] Error fetching payments for ${publicKey}:`, error.message || error);
+export const STROOPS_PER_UNIT = 10_000_000;
+
+export interface DecodedStellarAsset {
+  assetCode: string;
+  assetIssuer: string | null;
+}
+
+export interface SacTransfer {
+  contractId: string;
+  assetCode: string | null;
+  assetIssuer: string | null;
+  from: string;
+  to: string;
+  amount: string;
+  rawAmount: string;
+}
+
+/**
+ * Decodes a Horizon payment record into an asset code and issuer address.
+ * Native XLM payments resolve to { assetCode: 'XLM', assetIssuer: null } while
+ * credit_alphanum4 / credit_alphanum12 records carry their own code + issuer.
+ */
+export function decodeHorizonAsset(record: any): DecodedStellarAsset {
+  if (record?.asset_type === 'native' || !record?.asset_type) {
+    return { assetCode: 'XLM', assetIssuer: null };
   }
+
+  return {
+    assetCode: record.asset_code || 'Unknown',
+    assetIssuer: record.asset_issuer || null,
+  };
+}
+
+/**
+ * Converts a raw token amount (stroops / smallest SAC unit) into a human
+ * readable decimal string using the given number of decimals.
+ */
+export function formatTokenAmount(
+  rawAmount: string | number | bigint,
+  decimals: number = 7
+): string {
+  let raw: bigint;
+  try {
+    raw = typeof rawAmount === 'bigint' ? rawAmount : BigInt(String(rawAmount).trim());
+  } catch {
+    raw = 0n;
+  }
+
+  const sign = raw < 0n ? '-' : '';
+  const abs = sign ? -raw : raw;
+  const divisor = 10n ** BigInt(Math.max(0, decimals));
+  const whole = abs / divisor;
+  const fraction = (abs % divisor).toString().padStart(decimals, '0').replace(/0+$/, '');
+
+  return `${sign}${whole}${fraction ? `.${fraction}` : ''}`;
+}
+
+/**
+ * Decodes a Soroban ScVal address (or an already decoded strkey) into its
+ * string representation (G... for accounts, C... for contracts).
+ */
+export function decodeScAddress(scVal: any): string | null {
+  if (!scVal) return null;
+
+  if (typeof scVal === 'string') {
+    return scVal.startsWith('G') || scVal.startsWith('C') ? scVal : null;
+  }
+
+  if (typeof scVal === 'object') {
+    try {
+      const native = StellarSdk.scValToNative(scVal);
+      if (typeof native === 'string') {
+        return native.startsWith('G') || native.startsWith('C') ? native : null;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Decodes a Soroban i128 amount (raw ScVal, { lo, hi } shape or plain value)
+ * into a bigint of stroops.
+ */
+export function decodeScAmount(value: any): bigint | null {
+  if (value === null || value === undefined) return null;
+
+  if (typeof value === 'bigint') return value;
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return BigInt(Math.trunc(value));
+  }
+
+  if (typeof value === 'string' && /^-?\d+$/.test(value.trim())) {
+    return BigInt(value.trim());
+  }
+
+  if (typeof value === 'object') {
+    const i128 = value.i128 ?? value.value?.i128;
+    if (i128 && typeof i128 === 'object' && i128.lo !== undefined) {
+      const lo = BigInt(i128.lo >>> 0);
+      const hi = BigInt(i128.hi >>> 0);
+      return (hi << 64n) + lo;
+    }
+    if (typeof i128 === 'string' && /^-?\d+$/.test(i128)) {
+      return BigInt(i128);
+    }
+    try {
+      const native = StellarSdk.scValToNative(value);
+      if (typeof native === 'bigint') return native;
+      if (typeof native === 'number' && Number.isFinite(native)) {
+        return BigInt(Math.trunc(native));
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function extractTopicValue(topicEntry: any): string | null {
+  if (topicEntry === null || topicEntry === undefined) return null;
+  if (typeof topicEntry === 'string') return topicEntry;
+  if (typeof topicEntry === 'object' && typeof topicEntry.symbol === 'string') {
+    return topicEntry.symbol;
+  }
+  return null;
+}
+
+/**
+ * Parses a Soroban Asset Contract (SAC) transfer event into a structured
+ * transfer with the decimal-adjusted amount. Supports both canonical RPC
+ * events (topic: [symbol, from, to] + i128 data) and simplified payloads.
+ */
+export function parseSacTransferEvent(event: any, decimals: number = 7): SacTransfer | null {
+  if (!event) return null;
+
+  const topics = Array.isArray(event.topic) ? event.topic : [];
+  const action = extractTopicValue(topics[0]) ?? (typeof event.topic === 'string' ? event.topic : '');
+
+  const value = event.value ?? event.data ?? {};
+  const from = (topics.length > 1 ? decodeScAddress(topics[1]) : null) ?? value.from ?? '';
+  const to = (topics.length > 2 ? decodeScAddress(topics[2]) : null) ?? value.to ?? '';
+
+  let rawAmount = decodeScAmount(value.amount);
+  if (rawAmount === null && !value.amount && !value.from && !value.to) {
+    rawAmount = decodeScAmount(value);
+  }
+
+  if (!action || action !== 'transfer' || rawAmount === null) {
+    return null;
+  }
+
+  if (!from && !to) {
+    return null;
+  }
+
+  return {
+    contractId: event.contractId || '',
+    assetCode: event.assetCode ?? null,
+    assetIssuer: event.assetIssuer ?? null,
+    from,
+    to,
+    amount: formatTokenAmount(rawAmount, decimals),
+    rawAmount: rawAmount.toString(),
+  };
 }
 
 export const stellar = {
