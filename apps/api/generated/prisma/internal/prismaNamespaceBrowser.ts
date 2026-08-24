@@ -54,7 +54,8 @@ export const ModelName = {
   User: 'User',
   Wallet: 'Wallet',
   Payment: 'Payment',
-  NotificationPreference: 'NotificationPreference'
+  NotificationPreference: 'NotificationPreference',
+  Webhook: 'Webhook'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -100,6 +101,7 @@ export const PaymentScalarFieldEnum = {
   fromAddress: 'fromAddress',
   amount: 'amount',
   asset: 'asset',
+  assetIssuer: 'assetIssuer',
   memo: 'memo',
   receivedAt: 'receivedAt',
   createdAt: 'createdAt'
@@ -119,6 +121,18 @@ export const NotificationPreferenceScalarFieldEnum = {
 } as const
 
 export type NotificationPreferenceScalarFieldEnum = (typeof NotificationPreferenceScalarFieldEnum)[keyof typeof NotificationPreferenceScalarFieldEnum]
+
+
+export const WebhookScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  url: 'url',
+  secret: 'secret',
+  isActive: 'isActive',
+  createdAt: 'createdAt'
+} as const
+
+export type WebhookScalarFieldEnum = (typeof WebhookScalarFieldEnum)[keyof typeof WebhookScalarFieldEnum]
 
 
 export const SortOrder = {

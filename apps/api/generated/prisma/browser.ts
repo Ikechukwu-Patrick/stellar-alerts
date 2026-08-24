@@ -37,3 +37,8 @@ export type Payment = Prisma.PaymentModel
  * 
  */
 export type NotificationPreference = Prisma.NotificationPreferenceModel
+/**
+ * Model Webhook
+ * 
+ */
+export type Webhook = Prisma.WebhookModel

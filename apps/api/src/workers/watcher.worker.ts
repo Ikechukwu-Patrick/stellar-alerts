@@ -1,6 +1,6 @@
 import * as StellarSdk from 'stellar-sdk';
 import { prisma } from '../lib/prisma';
-import { stellar } from '../lib/stellar';
+import { stellar, decodeHorizonAsset, parseSacTransferEvent } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
 import { getSorobanLatestLedger } from '../lib/soroban';
 
@@ -10,18 +10,30 @@ export async function processPaymentRecord(
 ) {
   let amount: string | undefined;
   let asset: string = 'XLM';
+  let assetIssuer: string | null = null;
   let fromAddress: string = '';
-  const txHash: string = record.transaction_hash;
+  const txHash: string = record.transaction_hash || record.hash || '';
   const receivedAt: Date = new Date(record.created_at || Date.now());
 
   if (record.type === 'payment') {
+    const decodedAsset = decodeHorizonAsset(record);
     amount = record.amount;
-    asset = record.asset_type === 'native' ? 'XLM' : record.asset_code || 'Unknown';
+    asset = decodedAsset.assetCode;
+    assetIssuer = decodedAsset.assetIssuer;
     fromAddress = record.from || '';
   } else if (record.type === 'create_account') {
     amount = record.starting_balance;
     asset = 'XLM';
+    assetIssuer = null;
     fromAddress = record.funder || '';
+  } else {
+    const sacTransfer = parseSacTransferEvent(record);
+    if (!sacTransfer) return;
+
+    amount = sacTransfer.amount;
+    asset = sacTransfer.assetCode ?? sacTransfer.contractId ?? 'Unknown';
+    assetIssuer = sacTransfer.assetIssuer;
+    fromAddress = sacTransfer.from;
   }
 
   if (!amount || !txHash) return;
@@ -43,6 +55,7 @@ export async function processPaymentRecord(
         fromAddress,
         amount: Number(amount),
         asset,
+        assetIssuer,
         receivedAt,
       },
     });
@@ -54,6 +67,7 @@ export async function processPaymentRecord(
       walletId: wallet.id,
       amount,
       asset,
+      assetIssuer,
       fromAddress,
       receivedAt: receivedAt.toISOString(),
     });
