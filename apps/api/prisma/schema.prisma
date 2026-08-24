@@ -16,13 +16,23 @@ model User {
 }
 
 model Wallet {
-  id         String     @id @default(cuid())
+  id         String           @id @default(cuid())
   userId     String
-  user       User       @relation(fields: [userId], references: [id])
-  publicKey  String     @unique
+  user       User             @relation(fields: [userId], references: [id])
+  publicKey  String           @unique
   label      String?
-  createdAt  DateTime   @default(now())
+  createdAt  DateTime         @default(now())
   payments   Payment[]
+  cursor     IngestionCursor?
+}
+
+model IngestionCursor {
+  id           String   @id @default(cuid())
+  walletId     String   @unique
+  wallet       Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  pagingToken  String
+  lastSyncedAt DateTime @default(now()) @updatedAt
+  createdAt    DateTime @default(now())
 }
 
 model Payment {

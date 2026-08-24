@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/Wallet'
+export type * from './models/IngestionCursor'
 export type * from './models/Payment'
 export type * from './models/NotificationPreference'
 export type * from './commonInputTypes'

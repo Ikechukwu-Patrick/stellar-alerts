@@ -28,6 +28,11 @@ export type User = Prisma.UserModel
  */
 export type Wallet = Prisma.WalletModel
 /**
+ * Model IngestionCursor
+ * 
+ */
+export type IngestionCursor = Prisma.IngestionCursorModel
+/**
  * Model Payment
  * 
  */
