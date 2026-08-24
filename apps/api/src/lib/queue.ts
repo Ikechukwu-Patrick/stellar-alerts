@@ -1,4 +1,5 @@
-import { Queue, QueueEvents, Job } from 'bullmq';
+import { Queue, QueueEvents, Job, Worker } from 'bullmq';
+import { Resend } from 'resend';
 
 export interface AlertJobData {
   paymentId: string;
@@ -16,6 +17,9 @@ const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
 export let alertQueue: Queue<AlertJobData> | null = null;
 export let dlqQueue: Queue<AlertJobData> | null = null;
 export let alertQueueEvents: QueueEvents | null = null;
+export let alertWorker: Worker<AlertJobData> | null = null;
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_123');
 
 try {
   const connection = {
@@ -40,6 +44,31 @@ try {
 
   dlqQueue = new Queue<AlertJobData>('payment-alerts-dlq', { connection });
   alertQueueEvents = new QueueEvents('payment-alerts', { connection });
+
+  alertWorker = new Worker<AlertJobData>('payment-alerts', async (job) => {
+    const data = job.data;
+    
+    const { data: resendData, error } = await resend.emails.send({
+      from: 'Stellar Alerts <alerts@resend.dev>',
+      to: [data.fromAddress],
+      subject: `Payment Receipt: ${data.amount} ${data.asset}`,
+      html: `
+        <h1>Payment Receipt</h1>
+        <p><strong>Payment ID:</strong> ${data.paymentId}</p>
+        <p><strong>Transaction Hash:</strong> ${data.txHash}</p>
+        <p><strong>Amount:</strong> ${data.amount} ${data.asset}</p>
+        <p><strong>From Address:</strong> ${data.fromAddress}</p>
+        <p><strong>Received At:</strong> ${data.receivedAt}</p>
+      `,
+    });
+
+    if (error) {
+      throw new Error(`Resend Error: ${error.message}`);
+    }
+    
+    console.log(`[Worker] Sent email receipt for ${data.paymentId}`);
+    return resendData;
+  }, { connection });
 
   alertQueueEvents.on('failed', async ({ jobId, failedReason }) => {
     if (!jobId || !alertQueue || !dlqQueue) return;

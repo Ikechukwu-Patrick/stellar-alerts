@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { Job, QueueEvents } from 'bullmq';
+import { Job, QueueEvents, Worker } from 'bullmq';
 
 // We mock bullmq before importing queue
 vi.mock('bullmq', () => {
@@ -20,6 +20,19 @@ vi.mock('bullmq', () => {
     Job: {
       fromId: vi.fn(),
     },
+    Worker: vi.fn(),
+  };
+});
+
+vi.mock('resend', () => {
+  return {
+    Resend: vi.fn().mockImplementation(() => {
+      return {
+        emails: {
+          send: vi.fn().mockResolvedValue({ data: { id: 'test_id' }, error: null }),
+        },
+      };
+    }),
   };
 });
 
