@@ -36,6 +36,7 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",
     "pure-rand": "^8.4.2",
+    "resend": "^3.5.0",
     "stellar-sdk": "^13.3.0",
     "zod": "^4.4.3"
   }
