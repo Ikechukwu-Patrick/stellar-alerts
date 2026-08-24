@@ -399,6 +399,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Wallet: 'Wallet',
+  IngestionCursor: 'IngestionCursor',
   Payment: 'Payment',
   NotificationPreference: 'NotificationPreference',
   Webhook: 'Webhook'
@@ -566,6 +567,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.WalletCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.WalletCountAggregateOutputType> | number
+        }
+      }
+    }
+    IngestionCursor: {
+      payload: Prisma.$IngestionCursorPayload<ExtArgs>
+      fields: Prisma.IngestionCursorFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.IngestionCursorFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.IngestionCursorFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>
+        }
+        findFirst: {
+          args: Prisma.IngestionCursorFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.IngestionCursorFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>
+        }
+        findMany: {
+          args: Prisma.IngestionCursorFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>[]
+        }
+        create: {
+          args: Prisma.IngestionCursorCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>
+        }
+        createMany: {
+          args: Prisma.IngestionCursorCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.IngestionCursorCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>[]
+        }
+        delete: {
+          args: Prisma.IngestionCursorDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>
+        }
+        update: {
+          args: Prisma.IngestionCursorUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>
+        }
+        deleteMany: {
+          args: Prisma.IngestionCursorDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.IngestionCursorUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.IngestionCursorUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>[]
+        }
+        upsert: {
+          args: Prisma.IngestionCursorUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IngestionCursorPayload>
+        }
+        aggregate: {
+          args: Prisma.IngestionCursorAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateIngestionCursor>
+        }
+        groupBy: {
+          args: Prisma.IngestionCursorGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IngestionCursorGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.IngestionCursorCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IngestionCursorCountAggregateOutputType> | number
         }
       }
     }
@@ -848,6 +923,17 @@ export const WalletScalarFieldEnum = {
 } as const
 
 export type WalletScalarFieldEnum = (typeof WalletScalarFieldEnum)[keyof typeof WalletScalarFieldEnum]
+
+
+export const IngestionCursorScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  pagingToken: 'pagingToken',
+  lastSyncedAt: 'lastSyncedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type IngestionCursorScalarFieldEnum = (typeof IngestionCursorScalarFieldEnum)[keyof typeof IngestionCursorScalarFieldEnum]
 
 
 export const PaymentScalarFieldEnum = {
@@ -1136,6 +1222,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   wallet?: Prisma.WalletOmit
+  ingestionCursor?: Prisma.IngestionCursorOmit
   payment?: Prisma.PaymentOmit
   notificationPreference?: Prisma.NotificationPreferenceOmit
   webhook?: Prisma.WebhookOmit

@@ -209,6 +209,16 @@ export interface PrismaClient<
   get wallet(): Prisma.WalletDelegate<ExtArgs, { omit: OmitOpts }>;
 
   /**
+   * `prisma.ingestionCursor`: Exposes CRUD operations for the **IngestionCursor** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more IngestionCursors
+    * const ingestionCursors = await prisma.ingestionCursor.findMany()
+    * ```
+    */
+  get ingestionCursor(): Prisma.IngestionCursorDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
    * `prisma.payment`: Exposes CRUD operations for the **Payment** model.
     * Example usage:
     * ```ts

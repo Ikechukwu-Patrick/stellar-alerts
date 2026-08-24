@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Wallet: 'Wallet',
+  IngestionCursor: 'IngestionCursor',
   Payment: 'Payment',
   NotificationPreference: 'NotificationPreference',
   Webhook: 'Webhook'
@@ -92,6 +93,17 @@ export const WalletScalarFieldEnum = {
 } as const
 
 export type WalletScalarFieldEnum = (typeof WalletScalarFieldEnum)[keyof typeof WalletScalarFieldEnum]
+
+
+export const IngestionCursorScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  pagingToken: 'pagingToken',
+  lastSyncedAt: 'lastSyncedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type IngestionCursorScalarFieldEnum = (typeof IngestionCursorScalarFieldEnum)[keyof typeof IngestionCursorScalarFieldEnum]
 
 
 export const PaymentScalarFieldEnum = {
