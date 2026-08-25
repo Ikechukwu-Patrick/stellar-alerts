@@ -1,10 +1,13 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { Job, QueueEvents, Worker } from 'bullmq';
+import { Job } from 'bullmq';
+
+const { queueState } = vi.hoisted(() => ({
+  queueState: { failedHandler: null as any },
+}));
 
 // We mock bullmq before importing queue
 vi.mock('bullmq', () => {
   const addMock = vi.fn().mockResolvedValue(true);
-  const onMock = vi.fn();
   
   return {
     Queue: vi.fn().mockImplementation(() => {
@@ -14,7 +17,11 @@ vi.mock('bullmq', () => {
     }),
     QueueEvents: vi.fn().mockImplementation(() => {
       return {
-        on: onMock,
+        on: vi.fn((event: string, handler: any) => {
+          if (event === 'failed') {
+            queueState.failedHandler = handler;
+          }
+        }),
       };
     }),
     Job: {
@@ -36,7 +43,7 @@ vi.mock('resend', () => {
   };
 });
 
-import { alertQueue, dlqQueue, alertQueueEvents } from './queue';
+import { dlqQueue } from './queue';
 
 describe('Queue DLQ routing', () => {
   beforeEach(() => {
@@ -44,10 +51,7 @@ describe('Queue DLQ routing', () => {
   });
 
   it('routes to DLQ when job fails after max attempts', async () => {
-    const onCall = (alertQueueEvents as any).on.mock.calls.find((call: any[]) => call[0] === 'failed');
-    expect(onCall).toBeDefined();
-
-    const failedHandler = onCall[1];
+    expect(queueState.failedHandler).toBeDefined();
 
     (Job.fromId as any).mockResolvedValue({
       attemptsMade: 5,
@@ -55,7 +59,7 @@ describe('Queue DLQ routing', () => {
       data: { txHash: 'test-tx' },
     });
 
-    await failedHandler({ jobId: '123', failedReason: 'Test error' });
+    await queueState.failedHandler({ jobId: '123', failedReason: 'Test error' });
 
     expect(dlqQueue?.add).toHaveBeenCalledWith(
       'dispatch-alert-failed',
@@ -65,8 +69,7 @@ describe('Queue DLQ routing', () => {
   });
   
   it('does not route to DLQ if attempts < max attempts', async () => {
-    const onCall = (alertQueueEvents as any).on.mock.calls.find((call: any[]) => call[0] === 'failed');
-    const failedHandler = onCall[1];
+    expect(queueState.failedHandler).toBeDefined();
 
     (Job.fromId as any).mockResolvedValue({
       attemptsMade: 3,
@@ -74,7 +77,7 @@ describe('Queue DLQ routing', () => {
       data: { txHash: 'test-tx' },
     });
 
-    await failedHandler({ jobId: '124', failedReason: 'Test error' });
+    await queueState.failedHandler({ jobId: '124', failedReason: 'Test error' });
 
     expect(dlqQueue?.add).not.toHaveBeenCalled();
   });
