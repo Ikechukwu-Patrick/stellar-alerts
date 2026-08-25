@@ -197,6 +197,22 @@ export async function runWatcher() {
   setInterval(poll, 30000);
 }
 
+/**
+ * Answers heartbeat pings from a supervising parent process (see
+ * supervisor.ts). Only registered when running as a forked child with an
+ * IPC channel, so standalone `node watcher.worker.js` runs are unaffected.
+ */
+function registerSupervisorHeartbeat() {
+  if (!process.send) return;
+
+  process.on('message', (message: any) => {
+    if (message?.type === 'ping') {
+      process.send?.({ type: 'pong', pid: process.pid });
+    }
+  });
+}
+
 if (require.main === module) {
+  registerSupervisorHeartbeat();
   runWatcher();
 }
