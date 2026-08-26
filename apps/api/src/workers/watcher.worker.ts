@@ -1,5 +1,5 @@
 import * as StellarSdk from 'stellar-sdk';
-import { prisma } from '../lib/prisma';
+import { prisma, connectWithRetry } from '../lib/prisma';
 import { stellar, decodeHorizonAsset, parseSacTransferEvent } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
 import { getSorobanLatestLedger } from '../lib/soroban';
@@ -143,15 +143,29 @@ export async function processWalletPayments(wallet: { id: string; publicKey: str
 export async function startHorizonSSEStream(wallet: { id: string; publicKey: string }) {
   console.log(`[WatcherWorker] 📡 Opening Horizon SSE payment stream for wallet ${wallet.publicKey.substring(0, 8)}...`);
 
+  let timeoutId: NodeJS.Timeout;
+  let closeStream: (() => void) | undefined;
+
+  const resetHeartbeat = () => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      console.warn(`[WatcherStream] ⚠️ Heartbeat timeout for ${wallet.publicKey.substring(0, 8)}... Reconnecting...`);
+      if (closeStream) closeStream();
+      startHorizonSSEStream(wallet);
+    }, 60000);
+  };
+
   try {
     const cursor = await ensureCursor(wallet);
+    resetHeartbeat();
 
-    const closeStream = stellar.server
+    closeStream = stellar.server
       .payments()
       .forAccount(wallet.publicKey)
       .cursor(cursor)
       .stream({
         onmessage: async (record: any) => {
+          resetHeartbeat();
           console.log(`[WatcherStream] ⚡ Live SSE stream message received: ${record.type}`);
           await processPaymentRecord(wallet, record);
           if (record.paging_token) {
@@ -160,18 +174,27 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
         },
         onerror: (error: any) => {
           console.error(`[WatcherStream] SSE stream error for ${wallet.publicKey.substring(0, 8)}...:`, error);
+          resetHeartbeat();
         },
-      });
+      }) as unknown as () => void; // cast to avoid typings issues since stellar-sdk types might vary
+
+    const originalClose = closeStream;
+    closeStream = () => {
+      clearTimeout(timeoutId);
+      if (originalClose) originalClose();
+    };
 
     return closeStream;
   } catch (err: any) {
     console.error(`[WatcherStream] Failed to open SSE stream: ${err.message}`);
+    clearTimeout(timeoutId!);
     return null;
   }
 }
 
 export async function runWatcher() {
   console.log('[WatcherWorker] 🚀 Starting Stellar Testnet Watcher Worker...');
+  await connectWithRetry();
 
   const poll = async () => {
     try {
@@ -197,6 +220,22 @@ export async function runWatcher() {
   setInterval(poll, 30000);
 }
 
+/**
+ * Answers heartbeat pings from a supervising parent process (see
+ * supervisor.ts). Only registered when running as a forked child with an
+ * IPC channel, so standalone `node watcher.worker.js` runs are unaffected.
+ */
+function registerSupervisorHeartbeat() {
+  if (!process.send) return;
+
+  process.on('message', (message: any) => {
+    if (message?.type === 'ping') {
+      process.send?.({ type: 'pong', pid: process.pid });
+    }
+  });
+}
+
 if (require.main === module) {
+  registerSupervisorHeartbeat();
   runWatcher();
 }
