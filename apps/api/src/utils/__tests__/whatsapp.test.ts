@@ -51,13 +51,13 @@ describe('whatsapp utility', () => {
     it('should format message in Spanish (ES)', () => {
       const msg = formatWhatsAppMessage(sampleData, 'ES');
       expect(msg).toContain('Confirmación de Pago Recibido');
-      expect(msg).toContain('Monto: 100.50 USDC');
+      expect(msg).toContain('*Monto:* 100.50 USDC');
     });
 
     it('should format message in Portuguese (PT)', () => {
       const msg = formatWhatsAppMessage(sampleData, 'PT');
       expect(msg).toContain('Confirmação de Pagamento Recebido');
-      expect(msg).toContain('Valor: 100.50 USDC');
+      expect(msg).toContain('*Valor:* 100.50 USDC');
     });
   });
 
