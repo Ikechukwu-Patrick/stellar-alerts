@@ -1,6 +1,10 @@
 import { Queue, QueueEvents, Job, Worker } from 'bullmq';
 import { Resend } from 'resend';
 import { prisma } from './prisma';
+import { dispatchDiscordAlert } from '../utils/discord';
+import { generateWebhookSignature } from '../utils/webhook-signer';
+
+const DISCORD_WEBHOOK_HOST = 'discord.com/api/webhooks';
 
 export interface AlertJobData {
   paymentId: string;
