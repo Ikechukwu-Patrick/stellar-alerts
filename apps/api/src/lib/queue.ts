@@ -120,6 +120,28 @@ try {
   console.warn(`[Queue] Could not initialize BullMQ queue: ${err.message}`);
 }
 
+async function dispatchDiscordAlerts(data: AlertJobData) {
+  try {
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: data.walletId },
+      include: { user: { include: { webhooks: true } } },
+    });
+
+    const discordWebhooks = (wallet?.user.webhooks || []).filter(
+      (webhook) => webhook.isActive && webhook.url.includes(DISCORD_WEBHOOK_HOST)
+    );
+
+    for (const webhook of discordWebhooks) {
+      const delivered = await dispatchDiscordAlert(webhook.url, data);
+      if (delivered) {
+        console.log(`[Worker] Sent Discord embed for ${data.paymentId} to webhook ${webhook.id}`);
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[Worker] Failed to dispatch Discord alerts for ${data.paymentId}: ${err.message}`);
+  }
+}
+
 export async function enqueuePaymentAlert(data: AlertJobData) {
   if (!alertQueue) {
     console.log(`[Queue] Skipping queue enqueue for payment ${data.txHash} (Queue not connected)`);
