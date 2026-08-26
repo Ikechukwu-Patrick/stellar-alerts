@@ -2,9 +2,12 @@ import { Queue, QueueEvents, Job, Worker } from 'bullmq';
 import { Resend } from 'resend';
 import { prisma } from './prisma';
 import { dispatchDiscordAlert } from '../utils/discord';
+import { dispatchSlackAlert } from '../utils/slack';
+import { dispatchWhatsAppAlert } from '../utils/whatsapp';
 import { generateWebhookSignature } from '../utils/webhook-signer';
 
 const DISCORD_WEBHOOK_HOST = 'discord.com/api/webhooks';
+const SLACK_WEBHOOK_HOST = 'hooks.slack.com';
 
 export interface AlertJobData {
   paymentId: string;
@@ -75,6 +78,8 @@ try {
     console.log(`[Worker] Sent email receipt for ${data.paymentId}`);
 
     await dispatchDiscordAlerts(data);
+    await dispatchSlackAlerts(data);
+    await dispatchWhatsAppAlerts(data);
     await dispatchCustomWebhooks(data);
 
     return resendData;
@@ -122,6 +127,45 @@ async function dispatchDiscordAlerts(data: AlertJobData) {
   }
 }
 
+export async function dispatchSlackAlerts(data: AlertJobData) {
+  try {
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: data.walletId },
+      include: { user: { include: { webhooks: true } } },
+    });
+
+    const slackWebhooks = (wallet?.user.webhooks || []).filter(
+      (webhook) => webhook.isActive && webhook.url.includes(SLACK_WEBHOOK_HOST)
+    );
+
+    for (const webhook of slackWebhooks) {
+      const delivered = await dispatchSlackAlert(webhook.url, data);
+      if (delivered) {
+        console.log(`[Worker] Sent Slack Block Kit card for ${data.paymentId} to webhook ${webhook.id}`);
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[Worker] Failed to dispatch Slack alerts for ${data.paymentId}: ${err.message}`);
+  }
+}
+
+export async function dispatchWhatsAppAlerts(data: AlertJobData) {
+  try {
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: data.walletId },
+      include: { user: { include: { notifyPrefs: true } } },
+    });
+
+    const prefs = wallet?.user.notifyPrefs;
+    if (prefs?.whatsappEnabled && prefs?.whatsappNumber) {
+      const language = (prefs as any).language || 'EN';
+      await dispatchWhatsAppAlert(prefs.whatsappNumber, data, language);
+    }
+  } catch (err: any) {
+    console.warn(`[Worker] Failed to dispatch WhatsApp alert for ${data.paymentId}: ${err.message}`);
+  }
+}
+
 export async function dispatchCustomWebhooks(data: AlertJobData) {
   try {
     const wallet = await prisma.wallet.findUnique({
@@ -130,7 +174,10 @@ export async function dispatchCustomWebhooks(data: AlertJobData) {
     });
 
     const customWebhooks = (wallet?.user.webhooks || []).filter(
-      (webhook) => webhook.isActive && !webhook.url.includes(DISCORD_WEBHOOK_HOST)
+      (webhook) =>
+        webhook.isActive &&
+        !webhook.url.includes(DISCORD_WEBHOOK_HOST) &&
+        !webhook.url.includes(SLACK_WEBHOOK_HOST)
     );
 
     const payload = JSON.stringify({
