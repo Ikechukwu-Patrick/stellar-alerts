@@ -1,5 +1,5 @@
 import * as StellarSdk from 'stellar-sdk';
-import { prisma } from '../lib/prisma';
+import { prisma, connectWithRetry } from '../lib/prisma';
 import { stellar, decodeHorizonAsset, parseSacTransferEvent } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
 import { getSorobanLatestLedger } from '../lib/soroban';
@@ -172,6 +172,7 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
 
 export async function runWatcher() {
   console.log('[WatcherWorker] 🚀 Starting Stellar Testnet Watcher Worker...');
+  await connectWithRetry();
 
   const poll = async () => {
     try {
@@ -213,6 +214,22 @@ export async function runWatcher() {
   process.on('SIGINT', shutdown);
 }
 
+/**
+ * Answers heartbeat pings from a supervising parent process (see
+ * supervisor.ts). Only registered when running as a forked child with an
+ * IPC channel, so standalone `node watcher.worker.js` runs are unaffected.
+ */
+function registerSupervisorHeartbeat() {
+  if (!process.send) return;
+
+  process.on('message', (message: any) => {
+    if (message?.type === 'ping') {
+      process.send?.({ type: 'pong', pid: process.pid });
+    }
+  });
+}
+
 if (require.main === module) {
+  registerSupervisorHeartbeat();
   runWatcher();
 }
