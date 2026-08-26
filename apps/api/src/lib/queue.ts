@@ -142,6 +142,55 @@ async function dispatchDiscordAlerts(data: AlertJobData) {
   }
 }
 
+export async function dispatchCustomWebhooks(data: AlertJobData) {
+  try {
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: data.walletId },
+      include: { user: { include: { webhooks: true } } },
+    });
+
+    const customWebhooks = (wallet?.user.webhooks || []).filter(
+      (webhook) => webhook.isActive && !webhook.url.includes(DISCORD_WEBHOOK_HOST)
+    );
+
+    const payload = JSON.stringify({
+      event: 'payment.received',
+      timestamp: new Date().toISOString(),
+      data: {
+        paymentId: data.paymentId,
+        txHash: data.txHash,
+        walletId: data.walletId,
+        amount: data.amount,
+        asset: data.asset,
+        assetIssuer: data.assetIssuer,
+        fromAddress: data.fromAddress,
+        receivedAt: data.receivedAt,
+      },
+    });
+
+    for (const webhook of customWebhooks) {
+      try {
+        const signature = generateWebhookSignature(payload, webhook.secret);
+        await fetch(webhook.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Stellar-Signature': signature.headerValue,
+            'X-Stellar-Alerts-Nonce': signature.nonce,
+          },
+          body: payload,
+          signal: AbortSignal.timeout(10000),
+        });
+        console.log(`[Worker] Sent custom webhook for ${data.paymentId} to webhook ${webhook.id}`);
+      } catch (err: any) {
+        console.warn(`[Worker] Failed to dispatch webhook to ${webhook.url}: ${err.message}`);
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[Worker] Failed to dispatch custom webhooks for ${data.paymentId}: ${err.message}`);
+  }
+}
+
 export async function enqueuePaymentAlert(data: AlertJobData) {
   if (!alertQueue) {
     console.log(`[Queue] Skipping queue enqueue for payment ${data.txHash} (Queue not connected)`);
