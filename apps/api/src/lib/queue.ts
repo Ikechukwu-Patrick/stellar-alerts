@@ -1,5 +1,6 @@
 import { Queue, QueueEvents, Job, Worker } from 'bullmq';
 import { Resend } from 'resend';
+import { prisma } from './prisma';
 
 export interface AlertJobData {
   paymentId: string;
@@ -68,6 +69,34 @@ try {
     }
     
     console.log(`[Worker] Sent email receipt for ${data.paymentId}`);
+
+    try {
+      const payment = await prisma.payment.findUnique({
+        where: { id: data.paymentId },
+        include: { wallet: { include: { user: { include: { notifyPrefs: true } } } } }
+      });
+
+      if (payment?.wallet?.user?.notifyPrefs?.telegramEnabled && payment.wallet.user.notifyPrefs.telegramChatId) {
+        const chatId = payment.wallet.user.notifyPrefs.telegramChatId;
+        const botToken = process.env.TELEGRAM_BOT_TOKEN || 'mock_token';
+        const message = `Payment Receipt:\nAmount: ${data.amount} ${data.asset}\nFrom: ${data.fromAddress}`;
+        
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text: message })
+        });
+        
+        if (!response.ok) {
+          console.warn(`[Worker] Failed to send Telegram message for ${data.paymentId}`);
+        } else {
+          console.log(`[Worker] Sent Telegram receipt for ${data.paymentId}`);
+        }
+      }
+    } catch (dbErr: any) {
+      console.warn(`[Worker] Failed to check Telegram preferences for ${data.paymentId}: ${dbErr.message}`);
+    }
+
     return resendData;
   }, { connection });
 

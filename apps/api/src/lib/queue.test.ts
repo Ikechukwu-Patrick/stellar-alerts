@@ -36,6 +36,14 @@ vi.mock('resend', () => {
   };
 });
 
+vi.mock('./prisma', () => ({
+  prisma: {
+    payment: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
 import { alertQueue, dlqQueue, alertQueueEvents } from './queue';
 
 const failedCall = (alertQueueEvents as any)?.on?.mock?.calls?.find((call: any[]) => call[0] === 'failed');
@@ -79,3 +87,71 @@ describe('Queue DLQ routing', () => {
   });
 });
 
+import { prisma } from './prisma';
+
+const workerCall = (Worker as any).mock.calls.find((call: any[]) => call[0] === 'payment-alerts');
+const workerHandler = workerCall ? workerCall[1] : null;
+
+describe('Telegram Dispatcher Worker', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+  });
+
+  it('dispatches telegram message when user has valid chatId and enabled', async () => {
+    expect(workerHandler).toBeDefined();
+
+    (prisma.payment.findUnique as any).mockResolvedValue({
+      id: 'pay-123',
+      wallet: {
+        user: {
+          notifyPrefs: {
+            telegramEnabled: true,
+            telegramChatId: 'chat-123',
+          },
+        },
+      },
+    });
+
+    await workerHandler({
+      data: {
+        paymentId: 'pay-123',
+        amount: '10',
+        asset: 'XLM',
+        fromAddress: 'GABC...',
+      },
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('https://api.telegram.org/bot'),
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"chat_id":"chat-123"'),
+      })
+    );
+  });
+
+  it('does not dispatch telegram message when telegram is disabled', async () => {
+    expect(workerHandler).toBeDefined();
+
+    (prisma.payment.findUnique as any).mockResolvedValue({
+      id: 'pay-124',
+      wallet: {
+        user: {
+          notifyPrefs: {
+            telegramEnabled: false,
+            telegramChatId: 'chat-123',
+          },
+        },
+      },
+    });
+
+    await workerHandler({
+      data: {
+        paymentId: 'pay-124',
+      },
+    });
+
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
