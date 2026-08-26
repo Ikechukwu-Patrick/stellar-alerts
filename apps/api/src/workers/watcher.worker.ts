@@ -3,6 +3,7 @@ import { prisma, connectWithRetry } from '../lib/prisma';
 import { stellar, decodeHorizonAsset, parseSacTransferEvent } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
 import { getSorobanLatestLedger } from '../lib/soroban';
+import { withWalletLock } from '../lib/lock';
 
 export async function processPaymentRecord(
   wallet: { id: string; publicKey: string },
@@ -114,30 +115,32 @@ export async function processWalletPayments(wallet: { id: string; publicKey: str
     return;
   }
 
-  let cursor = await ensureCursor(wallet);
+  await withWalletLock(wallet.id, async () => {
+    let cursor = await ensureCursor(wallet);
 
-  for (let page = 0; page < MAX_CATCHUP_PAGES; page++) {
-    const records = (await stellar.getPaymentsSince(
-      wallet.publicKey,
-      cursor,
-      CURSOR_PAGE_SIZE
-    )) as any[];
-    if (records.length === 0) return;
+    for (let page = 0; page < MAX_CATCHUP_PAGES; page++) {
+      const records = (await stellar.getPaymentsSince(
+        wallet.publicKey,
+        cursor,
+        CURSOR_PAGE_SIZE
+      )) as any[];
+      if (records.length === 0) return;
 
-    for (const record of records) {
-      await processPaymentRecord(wallet, record);
-      if (record.paging_token) {
-        cursor = record.paging_token;
-        await saveCursor(wallet.id, cursor);
+      for (const record of records) {
+        await processPaymentRecord(wallet, record);
+        if (record.paging_token) {
+          cursor = record.paging_token;
+          await saveCursor(wallet.id, cursor);
+        }
       }
+
+      if (records.length < CURSOR_PAGE_SIZE) return;
     }
 
-    if (records.length < CURSOR_PAGE_SIZE) return;
-  }
-
-  console.warn(
-    `[WatcherWorker] Catch-up page limit reached for ${wallet.publicKey.substring(0, 8)}..., resuming next poll from ${cursor}`
-  );
+    console.warn(
+      `[WatcherWorker] Catch-up page limit reached for ${wallet.publicKey.substring(0, 8)}..., resuming next poll from ${cursor}`
+    );
+  });
 }
 
 export async function startHorizonSSEStream(wallet: { id: string; publicKey: string }) {
@@ -167,10 +170,12 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
         onmessage: async (record: any) => {
           resetHeartbeat();
           console.log(`[WatcherStream] ⚡ Live SSE stream message received: ${record.type}`);
-          await processPaymentRecord(wallet, record);
-          if (record.paging_token) {
-            await saveCursor(wallet.id, record.paging_token);
-          }
+          await withWalletLock(wallet.id, async () => {
+            await processPaymentRecord(wallet, record);
+            if (record.paging_token) {
+              await saveCursor(wallet.id, record.paging_token);
+            }
+          });
         },
         onerror: (error: any) => {
           console.error(`[WatcherStream] SSE stream error for ${wallet.publicKey.substring(0, 8)}...:`, error);
