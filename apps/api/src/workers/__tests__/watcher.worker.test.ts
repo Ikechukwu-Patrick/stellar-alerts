@@ -15,16 +15,16 @@ vi.mock('../../lib/prisma', () => ({
 }));
 
 vi.mock('../../lib/stellar', () => ({
+  decodeHorizonAsset: vi.fn((record: any) => ({
+    assetCode: record?.asset_type === 'native' ? 'XLM' : record?.asset_code || 'XLM',
+    assetIssuer: record?.asset_issuer || null,
+  })),
   stellar: {
     server: {},
     getRecentPayments: vi.fn(),
     getPaymentsSince: vi.fn(),
     getLatestPagingToken: vi.fn(),
   },
-  decodeHorizonAsset: vi.fn().mockImplementation((record: any) => ({
-    assetCode: record?.asset_type === 'native' ? 'XLM' : record?.asset_code || 'XLM',
-    assetIssuer: record?.asset_issuer || null,
-  })),
 }));
 
 vi.mock('../../lib/queue', () => ({
