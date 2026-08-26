@@ -1,6 +1,6 @@
 import { env } from './config/env';
 import { buildApp } from './app';
-import { prisma } from './lib/prisma';
+import { prisma, connectWithRetry } from './lib/prisma';
 
 const start = async () => {
   try {
