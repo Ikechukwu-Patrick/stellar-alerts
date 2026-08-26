@@ -2,6 +2,7 @@ import { Queue, QueueEvents, Job, Worker } from 'bullmq';
 import { Resend } from 'resend';
 import { prisma } from './prisma';
 import { dispatchDiscordAlert } from '../utils/discord';
+import { generateWebhookSignature } from '../utils/webhook-signer';
 
 const DISCORD_WEBHOOK_HOST = 'discord.com/api/webhooks';
 
@@ -74,6 +75,7 @@ try {
     console.log(`[Worker] Sent email receipt for ${data.paymentId}`);
 
     await dispatchDiscordAlerts(data);
+    await dispatchCustomWebhooks(data);
 
     return resendData;
   }, { connection });
@@ -117,6 +119,55 @@ async function dispatchDiscordAlerts(data: AlertJobData) {
     }
   } catch (err: any) {
     console.warn(`[Worker] Failed to dispatch Discord alerts for ${data.paymentId}: ${err.message}`);
+  }
+}
+
+export async function dispatchCustomWebhooks(data: AlertJobData) {
+  try {
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: data.walletId },
+      include: { user: { include: { webhooks: true } } },
+    });
+
+    const customWebhooks = (wallet?.user.webhooks || []).filter(
+      (webhook) => webhook.isActive && !webhook.url.includes(DISCORD_WEBHOOK_HOST)
+    );
+
+    const payload = JSON.stringify({
+      event: 'payment.received',
+      timestamp: new Date().toISOString(),
+      data: {
+        paymentId: data.paymentId,
+        txHash: data.txHash,
+        walletId: data.walletId,
+        amount: data.amount,
+        asset: data.asset,
+        assetIssuer: data.assetIssuer,
+        fromAddress: data.fromAddress,
+        receivedAt: data.receivedAt,
+      },
+    });
+
+    for (const webhook of customWebhooks) {
+      try {
+        const signature = generateWebhookSignature(payload, webhook.secret);
+        await fetch(webhook.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Stellar-Signature': signature.headerValue,
+            'X-Stellar-Alerts-Nonce': signature.nonce,
+          },
+          body: payload,
+          signal: AbortSignal.timeout(10000),
+        });
+        console.log(`[Worker] Sent custom webhook for ${data.paymentId} to webhook ${webhook.id}`);
+      } catch (err: any) {
+        console.warn(`[Worker] Failed to dispatch webhook to ${webhook.url}: ${err.message}`);
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[Worker] Failed to dispatch custom webhooks for ${data.paymentId}: ${err.message}`);
   }
 }
 
