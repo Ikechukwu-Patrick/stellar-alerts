@@ -122,6 +122,9 @@ describe('Telegram Dispatcher Worker', () => {
         amount: '10',
         asset: 'XLM',
         fromAddress: 'GABC...',
+        txHash: 'hash-123',
+        walletId: 'wallet-123',
+        receivedAt: new Date().toISOString(),
       },
     });
 
@@ -150,6 +153,12 @@ describe('Telegram Dispatcher Worker', () => {
     await paymentAlertWorkerProcessor({
       data: {
         paymentId: 'pay-124',
+        amount: '10',
+        asset: 'XLM',
+        fromAddress: 'GABC...',
+        txHash: 'hash-124',
+        walletId: 'wallet-124',
+        receivedAt: new Date().toISOString(),
       },
     });
 
