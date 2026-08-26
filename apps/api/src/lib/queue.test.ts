@@ -1,26 +1,25 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { Job, QueueEvents, Worker } from 'bullmq';
+import { Job } from 'bullmq';
+
+const { MockQueueAdd, MockQueueEventsOn, MockWorker } = vi.hoisted(() => ({
+  MockQueueAdd: vi.fn().mockResolvedValue(true),
+  MockQueueEventsOn: vi.fn(),
+  MockWorker: vi.fn(function() {}),
+}));
 
 // We mock bullmq before importing queue
 vi.mock('bullmq', () => {
-  const addMock = vi.fn().mockResolvedValue(true);
-  const onMock = vi.fn();
-  
   return {
     Queue: vi.fn(function() {
-      return {
-        add: addMock,
-      };
+      return { add: MockQueueAdd };
     }),
     QueueEvents: vi.fn(function() {
-      return {
-        on: onMock,
-      };
+      return { on: MockQueueEventsOn };
     }),
     Job: {
       fromId: vi.fn(),
     },
-    Worker: vi.fn(function() {}),
+    Worker: MockWorker,
   };
 });
 
@@ -30,6 +29,9 @@ vi.mock('./prisma', () => {
       wallet: {
         findUnique: vi.fn().mockResolvedValue(null),
       },
+      payment: {
+        findUnique: vi.fn(),
+      },
     },
   };
 });
@@ -37,6 +39,12 @@ vi.mock('./prisma', () => {
 vi.mock('../utils/discord', () => {
   return {
     dispatchDiscordAlert: vi.fn().mockResolvedValue(true),
+  };
+});
+
+vi.mock('../utils/webhook-signer', () => {
+  return {
+    generateWebhookSignature: vi.fn().mockReturnValue({ headerValue: 'test', nonce: 'test' }),
   };
 });
 
@@ -52,18 +60,8 @@ vi.mock('resend', () => {
   };
 });
 
-vi.mock('./prisma', () => ({
-  prisma: {
-    payment: {
-      findUnique: vi.fn(),
-    },
-  },
-}));
-
-import { alertQueue, dlqQueue, alertQueueEvents } from './queue';
-
-const failedCall = (alertQueueEvents as any)?.on?.mock?.calls?.find((call: any[]) => call[0] === 'failed');
-const failedHandler = failedCall ? failedCall[1] : null;
+import { alertQueue, dlqQueue, paymentAlertWorkerProcessor, failedJobHandler } from './queue';
+import { prisma } from './prisma';
 
 describe('Queue DLQ routing', () => {
   beforeEach(() => {
@@ -71,17 +69,15 @@ describe('Queue DLQ routing', () => {
   });
 
   it('routes to DLQ when job fails after max attempts', async () => {
-    expect(failedHandler).toBeDefined();
-
     (Job.fromId as any).mockResolvedValue({
       attemptsMade: 5,
       opts: { attempts: 5 },
       data: { txHash: 'test-tx' },
     });
 
-    await failedHandler({ jobId: '123', failedReason: 'Test error' });
+    await failedJobHandler({ jobId: '123', failedReason: 'Test error' });
 
-    expect(dlqQueue?.add).toHaveBeenCalledWith(
+    expect(MockQueueAdd).toHaveBeenCalledWith(
       'dispatch-alert-failed',
       { txHash: 'test-tx' },
       { jobId: 'dlq-123' }
@@ -89,24 +85,17 @@ describe('Queue DLQ routing', () => {
   });
   
   it('does not route to DLQ if attempts < max attempts', async () => {
-    expect(failedHandler).toBeDefined();
-
     (Job.fromId as any).mockResolvedValue({
       attemptsMade: 3,
       opts: { attempts: 5 },
       data: { txHash: 'test-tx' },
     });
 
-    await failedHandler({ jobId: '124', failedReason: 'Test error' });
+    await failedJobHandler({ jobId: '124', failedReason: 'Test error' });
 
-    expect(dlqQueue?.add).not.toHaveBeenCalled();
+    expect(MockQueueAdd).not.toHaveBeenCalled();
   });
 });
-
-import { prisma } from './prisma';
-
-const workerCall = (Worker as any).mock.calls.find((call: any[]) => call[0] === 'payment-alerts');
-const workerHandler = workerCall ? workerCall[1] : null;
 
 describe('Telegram Dispatcher Worker', () => {
   beforeEach(() => {
@@ -115,8 +104,6 @@ describe('Telegram Dispatcher Worker', () => {
   });
 
   it('dispatches telegram message when user has valid chatId and enabled', async () => {
-    expect(workerHandler).toBeDefined();
-
     (prisma.payment.findUnique as any).mockResolvedValue({
       id: 'pay-123',
       wallet: {
@@ -129,7 +116,7 @@ describe('Telegram Dispatcher Worker', () => {
       },
     });
 
-    await workerHandler({
+    await paymentAlertWorkerProcessor({
       data: {
         paymentId: 'pay-123',
         amount: '10',
@@ -148,8 +135,6 @@ describe('Telegram Dispatcher Worker', () => {
   });
 
   it('does not dispatch telegram message when telegram is disabled', async () => {
-    expect(workerHandler).toBeDefined();
-
     (prisma.payment.findUnique as any).mockResolvedValue({
       id: 'pay-124',
       wallet: {
@@ -162,7 +147,7 @@ describe('Telegram Dispatcher Worker', () => {
       },
     });
 
-    await workerHandler({
+    await paymentAlertWorkerProcessor({
       data: {
         paymentId: 'pay-124',
       },
