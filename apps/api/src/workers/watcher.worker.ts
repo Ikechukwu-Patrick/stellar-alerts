@@ -1,5 +1,5 @@
 import * as StellarSdk from 'stellar-sdk';
-import { prisma } from '../lib/prisma';
+import { prisma, connectWithRetry } from '../lib/prisma';
 import { stellar, decodeHorizonAsset, parseSacTransferEvent } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
 import { getSorobanLatestLedger } from '../lib/soroban';
@@ -172,6 +172,7 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
 
 export async function runWatcher() {
   console.log('[WatcherWorker] 🚀 Starting Stellar Testnet Watcher Worker...');
+  await connectWithRetry();
 
   const poll = async () => {
     try {
