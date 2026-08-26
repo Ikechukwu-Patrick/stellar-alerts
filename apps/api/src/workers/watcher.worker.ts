@@ -217,7 +217,23 @@ export async function runWatcher() {
   await poll();
 
   // Schedule periodic catchup poll every 30 seconds
-  setInterval(poll, 30000);
+  const intervalId = setInterval(poll, 30000);
+
+  const shutdown = async () => {
+    console.log('[WatcherWorker] 🛑 Graceful shutdown initiated...');
+    clearInterval(intervalId);
+    setTimeout(() => {
+      console.error('[WatcherWorker] ⚠️ Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 5000);
+
+    await prisma.$disconnect();
+    console.log('[WatcherWorker] ✅ Prisma disconnected cleanly');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
 /**
