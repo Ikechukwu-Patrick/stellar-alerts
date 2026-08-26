@@ -7,12 +7,12 @@ vi.mock('bullmq', () => {
   const onMock = vi.fn();
   
   return {
-    Queue: vi.fn().mockImplementation(() => {
+    Queue: vi.fn(function() {
       return {
         add: addMock,
       };
     }),
-    QueueEvents: vi.fn().mockImplementation(() => {
+    QueueEvents: vi.fn(function() {
       return {
         on: onMock,
       };
@@ -20,7 +20,7 @@ vi.mock('bullmq', () => {
     Job: {
       fromId: vi.fn(),
     },
-    Worker: vi.fn(),
+    Worker: vi.fn(function() {}),
   };
 });
 
@@ -42,7 +42,7 @@ vi.mock('../utils/discord', () => {
 
 vi.mock('resend', () => {
   return {
-    Resend: vi.fn().mockImplementation(() => {
+    Resend: vi.fn(function() {
       return {
         emails: {
           send: vi.fn().mockResolvedValue({ data: { id: 'test_id' }, error: null }),
